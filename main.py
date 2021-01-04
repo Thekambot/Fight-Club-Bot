@@ -1,11 +1,41 @@
 import discord
+import os
+import requests
+import json
+import random
 
-class MyClient(discord.Client):
-    async def on_ready(self):
-        print('Logged on as {0}!'.format(self.user))
+client = discord.Client()
 
-    async def on_message(self, message):
-        print('Message from {0.author}: {0.content}'.format(message))
+sad_words = ["sad", "depressed", "unhappy", "angry", "miserable", "kurwa"]
 
-client = MyClient()
-client.run('my token goes here')
+starter_encouragments = ["Cheer up!", "Hang in there.", "Walnij se monsterka byczku."]
+
+def get_quote():
+  response = requests.get("https://zenquotes.io/api/random")
+  json_data = json.loads(response.text)
+  quote = json_data[0]['q'] + " -" + json_data[0]['a']
+  return(quote)
+
+@client.event
+async def on_ready():
+  print('We have logged in as {0.user}' .format(client))
+
+@client.event
+async def on_message(message):
+  if message.author == client.user:
+    return  
+  
+  msg = message.content
+
+  if msg.startswith('$hello'):
+    await message.channel.send('Hello!')
+
+  if msg.startswith('$quote'):
+    quote = get_quote()
+    await message.channel.send(quote)
+
+  if any(word in msg for word in sad_words):
+    await message.channel.send(random.choice(starter_encouragments))
+
+
+client.run(os.getenv('TOKEN'))
